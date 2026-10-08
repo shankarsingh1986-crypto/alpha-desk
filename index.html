@@ -29,6 +29,9 @@
       <a href="#record">Track Record</a>
       <a href="#how">How It Works</a>
     </nav>
+    <button class="btn btn-ghost" id="installBtn" hidden>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M6 11l6 6 6-6M5 21h14"/></svg>Install App
+    </button>
     <a class="btn btn-primary" href="#join">Join</a>
   </div>
 </header>
@@ -158,6 +161,13 @@
   <div class="disc" id="disclaimer"></div>
   <div class="row"><span>© <span id="yr"></span> <span data-brand>SS Alpha Desk</span> · Research by <span id="analyst"></span></span><span id="mode"></span></div>
 </footer>
+
+<div class="install-bar" id="installBar" hidden>
+  <img src="icons/icon-192.png" alt="">
+  <div class="ib-text"><b>Get the SS Alpha Desk app</b><span id="ibHint">Live calls on your home screen. Free, no Play Store needed.</span></div>
+  <button class="btn btn-primary" id="ibInstall">Install</button>
+  <button class="ib-close" id="ibClose" aria-label="Close">×</button>
+</div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"><i></i><span id="toastText"></span></div>
 

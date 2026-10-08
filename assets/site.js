@@ -193,6 +193,33 @@
   DB.onSettings(s => { settings = s || {}; renderAnnc(); });
   $("#q").addEventListener("input", render);
 
+  /* ---------- install app prompt ---------- */
+  (function installPrompt() {
+    const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+    if (standalone) return;
+    const ua = navigator.userAgent;
+    const isIOS = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const bar = $("#installBar"), navBtn = $("#installBtn");
+    let deferred = null;
+    const snoozed = () => { try { return Date.now() < +(localStorage.getItem("ssad_install_snooze") || 0); } catch (e) { return false; } };
+    const snooze = () => { try { localStorage.setItem("ssad_install_snooze", Date.now() + 3 * 864e5); } catch (e) {} };
+    const show = () => { if (!snoozed()) setTimeout(() => { bar.hidden = false; }, 2500); };
+    $("#ibClose").onclick = () => { bar.hidden = true; snooze(); };
+
+    async function install() {
+      if (deferred) { deferred.prompt(); const r = await deferred.userChoice; deferred = null; bar.hidden = true; navBtn.hidden = true; if (r.outcome !== "accepted") snooze(); }
+      else if (isIOS) { $("#ibHint").innerHTML = 'Tap the <b>Share</b> button below, then <b>Add to Home Screen</b>.'; $("#ibInstall").hidden = true; }
+      else { $("#ibHint").innerHTML = 'Open the browser menu <b>⋮</b> and tap <b>Install app</b> or <b>Add to Home screen</b>.'; $("#ibInstall").hidden = true; }
+    }
+    $("#ibInstall").onclick = install;
+    navBtn.onclick = () => { bar.hidden = false; install(); };
+
+    addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferred = e; navBtn.hidden = false; show(); });
+    addEventListener("appinstalled", () => { bar.hidden = true; navBtn.hidden = true; toast("App installed. Open it from your home screen."); });
+    if (isIOS) { $("#ibInstall").textContent = "How?"; show(); }
+    else if (/android|mobile/i.test(ua)) setTimeout(() => { if (!deferred) show(); }, 4000);
+  })();
+
   setInterval(() => document.querySelectorAll("time[data-ts]").forEach(t => t.textContent = ago(+t.dataset.ts)), 30000);
   addEventListener("online", () => $("#liveLabel").textContent = "Live desk · synced");
   addEventListener("offline", () => $("#liveLabel").textContent = "Offline · showing last data");

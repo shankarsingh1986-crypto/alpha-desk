@@ -1,0 +1,13 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Everyone can read calls, updates and announcements.
+    // Only YOUR admin email can write. Replace the email below with yours.
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == "shankarsingh1986@gmail.com";
+    }
+    match /calls/{id}    { allow read: if true; allow write: if isAdmin(); }
+    match /activity/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /meta/{id}     { allow read: if true; allow write: if isAdmin(); }
+  }
+}

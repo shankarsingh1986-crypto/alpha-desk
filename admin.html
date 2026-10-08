@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Admin · SS Alpha Desk</title>
+<meta name="theme-color" content="#081022">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="assets/styles.css">
+<style>
+.wrap{max-width:1180px;margin:0 auto;padding-inline:20px;padding-block:28px 60px;display:grid;gap:20px}
+.demo{background:var(--hold-soft);color:var(--ink);border:1px solid var(--hold);border-radius:14px;padding:12px 16px;font-size:14px}
+.grid2{display:grid;grid-template-columns:400px 1fr;gap:20px;align-items:start}
+.form{display:grid;gap:14px;position:sticky;top:84px}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label.fl{display:grid;gap:6px;font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--muted);text-transform:uppercase}
+.in{font:inherit;font-size:15px;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:10px 12px;width:100%;min-width:0}
+.in:focus{outline:2px solid var(--brand);outline-offset:0;border-color:transparent}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.seg button{border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:10px;padding:10px 4px;font-size:12px;font-weight:800;letter-spacing:.04em}
+.seg button[aria-pressed="true"].buy{background:var(--buy);color:#fff;border-color:var(--buy)}
+.seg button[aria-pressed="true"].hold{background:var(--hold);color:#fff;border-color:var(--hold)}
+.seg button[aria-pressed="true"].win{background:var(--win);color:#fff;border-color:var(--win)}
+.seg button[aria-pressed="true"].exit{background:var(--exit);color:#fff;border-color:var(--exit)}
+.calc{background:var(--surface-2);border-radius:12px;padding:12px;font-size:13px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.calc b{font-family:var(--f-data)}
+.err{color:var(--loss);font-size:13px;min-height:1em}
+.btn-line{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.btn-sm{padding:7px 12px;font-size:12px;border-radius:9px}
+.btn-danger{background:var(--loss-soft);color:var(--loss);border:1px solid transparent}
+.list{display:grid;gap:10px}
+.item{display:grid;grid-template-columns:1fr;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.item h4{margin:0;font-family:var(--f-display);font-size:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.item .meta{font-size:12px;color:var(--muted);margin-top:4px}
+.acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.cmpq{display:flex;gap:4px}
+.cmpq input{width:90px;padding:7px 9px;font-size:13px}
+.tabs2{display:flex;gap:6px;margin-bottom:12px}
+.login{max-width:400px;margin:60px auto;display:grid;gap:14px}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}.form{position:static}.item{grid-template-columns:1fr}.acts{justify-content:flex-start}}
+</style>
+</head>
+<body>
+<header class="nav">
+  <div class="container">
+    <a class="logo" href="index.html"><img src="icons/icon-192.png" alt=""><span><span data-brand>SS Alpha Desk</span> · Admin</span></a>
+    <span class="live" style="margin-left:auto"><i></i><span id="who"></span></span>
+    <a class="btn btn-ghost btn-sm" href="index.html" target="_blank">View site</a>
+    <button class="btn btn-ghost btn-sm" id="logout" hidden>Log out</button>
+  </div>
+</header>
+
+<div class="login panel" id="login" hidden>
+  <h2 style="font-size:22px">Admin login</h2>
+  <label class="fl">Email<input class="in" id="le" type="email" autocomplete="username"></label>
+  <label class="fl">Password<input class="in" id="lp" type="password" autocomplete="current-password"></label>
+  <div class="err" id="lerr"></div>
+  <button class="btn btn-primary" id="lbtn">Log in</button>
+</div>
+
+<div class="wrap" id="app" hidden>
+  <div class="demo" id="demo" hidden><b>Demo mode.</b> Changes save in this browser only. Open the public site in another tab and watch it update live. Paste your Firebase settings in config.js to publish to all users.</div>
+
+  <div class="panel">
+    <div class="ph"><h3>Announcement banner</h3><span>Shows at the top of the site for every user</span></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <input class="in" id="annc" placeholder="e.g. Market volatile today. Trail stop-loss on swing positions." style="flex:1;min-width:220px">
+      <button class="btn btn-primary btn-sm" id="anncPub">Publish</button>
+      <button class="btn btn-line btn-sm" id="anncClr">Remove</button>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <form class="panel form" id="form" novalidate>
+      <div class="ph" style="margin:0"><h3 id="ftitle">New call</h3><button type="button" class="btn btn-line btn-sm" id="fnew" hidden>+ New call</button></div>
+      <input type="hidden" id="fid">
+      <label class="fl">Status
+        <div class="seg" id="seg">
+          <button type="button" class="buy" data-s="BUY">BUY</button>
+          <button type="button" class="hold" data-s="HOLD">HOLD</button>
+          <button type="button" class="win" data-s="TARGET">TARGET HIT</button>
+          <button type="button" class="exit" data-s="EXIT">EXIT</button>
+        </div>
+      </label>
+      <div class="f2">
+        <label class="fl">Share<input class="in" id="fshare" placeholder="e.g. SUNFLAG" autocapitalize="characters"></label>
+        <label class="fl">Date<input class="in" id="fdate" type="date"></label>
+      </div>
+      <label class="fl">View
+        <select class="in" id="fview"><option value="ST">ST – Swing Trading</option><option value="LT">LT – 1/2 Months</option><option value="PF">Portfolio Share</option></select>
+      </label>
+      <div class="f2">
+        <label class="fl">Entry ₹<input class="in" id="fentry" type="number" step="0.01" inputmode="decimal"></label>
+        <label class="fl">CMP ₹<input class="in" id="fcmp" type="number" step="0.01" inputmode="decimal"></label>
+      </div>
+      <label class="fl">Target<input class="in" id="ftarget" placeholder="e.g. 550+  or  75 / 100+"></label>
+      <div class="f2" id="exitBox">
+        <label class="fl">Exit ₹<input class="in" id="fexit" type="number" step="0.01" inputmode="decimal"></label>
+        <label class="fl">Exit date<input class="in" id="fexitDate" type="date"></label>
+      </div>
+      <label class="fl">Note (optional)<input class="in" id="fnote" placeholder="e.g. Accumulate 260–267"></label>
+      <div class="calc" id="calc"></div>
+      <div class="err" id="ferr"></div>
+      <button class="btn btn-primary" type="submit" id="fsave">Publish call</button>
+    </form>
+
+    <div class="panel">
+      <div class="ph"><h3>All calls</h3><span id="count"></span></div>
+      <div class="tabs2 chips" id="ltabs"></div>
+      <div class="list" id="list"></div>
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap" id="seedBox"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><i></i><span id="toastText"></span></div>
+
+<script src="config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="assets/core.js"></script>
+<script src="assets/admin.js"></script>
+</body>
+</html>

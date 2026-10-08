@@ -90,18 +90,43 @@
   }
 
   /* ---------- data layer ---------- */
-  const subs = { calls: [], activity: [], settings: [], auth: [] };
+  const subs = { calls: [], activity: [], settings: [], auth: [], denied: [] };
   const emit = (k, v) => subs[k].forEach(f => f(v));
   const DB = { live: LIVE };
 
   if (LIVE) {
     firebase.initializeApp(fb);
     const fs = firebase.firestore(), auth = firebase.auth();
-    let cache = {};
-    fs.collection("calls").onSnapshot(s => { cache = {}; const arr = s.docs.map(d => (cache[d.id] = { id: d.id, ...d.data() })); emit("calls", arr); });
-    fs.collection("activity").orderBy("ts", "desc").limit(40).onSnapshot(s => emit("activity", s.docs.map(d => ({ id: d.id, ...d.data() }))));
-    fs.doc("meta/settings").onSnapshot(d => emit("settings", d.exists ? d.data() : {}));
-    auth.onAuthStateChanged(u => emit("auth", u ? { email: u.email } : null));
+    let cache = {}, unsubs = [];
+    const denied = e => { console.warn(e); emit("denied", e); };
+    const ADMIN = (CFG.adminEmail || "").toLowerCase();
+    DB.isAdmin = u => !!u && !!u.email && u.email.toLowerCase() === ADMIN;
+    DB.start = () => {
+      if (unsubs.length) return;
+      unsubs.push(fs.collection("calls").onSnapshot(s => { cache = {}; const arr = s.docs.map(d => (cache[d.id] = { id: d.id, ...d.data() })); emit("calls", arr); }, denied));
+      unsubs.push(fs.collection("activity").orderBy("ts", "desc").limit(40).onSnapshot(s => emit("activity", s.docs.map(d => ({ id: d.id, ...d.data() }))), denied));
+      unsubs.push(fs.doc("meta/settings").onSnapshot(d => emit("settings", d.exists ? d.data() : {}), denied));
+    };
+    DB.stop = () => { unsubs.forEach(f => f()); unsubs = []; };
+    auth.onAuthStateChanged(u => emit("auth", u ? { uid: u.uid, email: u.email, name: u.displayName || (u.email || "").split("@")[0], photo: u.photoURL || "" } : null));
+
+    /* members */
+    DB.onMember = (uid, cb) => fs.collection("members").doc(uid).onSnapshot(d => cb(d.exists ? d.data() : null), () => cb(null));
+    DB.ensureMember = async u => {
+      const ref = fs.collection("members").doc(u.uid);
+      const d = await ref.get();
+      if (!d.exists) await ref.set({ email: u.email || "", name: u.name || "", status: "pending", validTill: 0, createdAt: Date.now() });
+    };
+    DB.onMembers = cb => fs.collection("members").onSnapshot(s => cb(s.docs.map(d => ({ uid: d.id, ...d.data() }))), denied);
+    DB.updateMember = (uid, data) => fs.collection("members").doc(uid).set({ ...data, updatedAt: Date.now() }, { merge: true });
+    DB.deleteMember = uid => fs.collection("members").doc(uid).delete();
+    DB.signInGoogle = async () => {
+      const p = new firebase.auth.GoogleAuthProvider(); p.setCustomParameters({ prompt: "select_account" });
+      try { await auth.signInWithPopup(p); }
+      catch (e) { if (e.code === "auth/popup-blocked" || e.code === "auth/operation-not-supported-in-this-environment") await auth.signInWithRedirect(p); else throw e; }
+    };
+    DB.signUpEmail = async (e, p, name) => { const r = await auth.createUserWithEmailAndPassword(e, p); if (name) await r.user.updateProfile({ displayName: name }); };
+    DB.resetPassword = e => auth.sendPasswordResetEmail(e);
     DB.saveCall = async (c) => {
       const old = c.id ? cache[c.id] : null;
       const data = { ...c, updatedAt: Date.now() }; delete data.id;
@@ -152,6 +177,8 @@
     DB.seed = async () => { st = seedState(); save(); push(); };
     DB.login = async () => {};
     DB.logout = async () => {};
+    DB.start = () => {}; DB.stop = () => {};
+    DB.isAdmin = () => true;
     setTimeout(() => { push(); emit("auth", { email: "demo" }); }, 0);
   }
 
@@ -159,6 +186,7 @@
   DB.onActivity = f => subs.activity.push(f);
   DB.onSettings = f => subs.settings.push(f);
   DB.onAuth = f => subs.auth.push(f);
+  DB.onDenied = f => subs.denied.push(f);
 
   window.AD = { CFG, DB, VIEWS, VIEW_SHORT, STATUS, enrich, stats, esc, num, inr, pctTxt, fmtDate, ago, todayISO };
 })();

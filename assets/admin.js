@@ -7,10 +7,15 @@
   let calls = [], status = "BUY", tab = "ACTIVE", cmpAt = null;
 
   /* auth */
+  let membersOn = false;
   DB.onAuth(u => {
-    $("#login").hidden = !!u; $("#app").hidden = !u; $("#logout").hidden = !u || !DB.live;
+    const ok = !!u && DB.isAdmin(u);
+    $("#login").hidden = ok; $("#app").hidden = !ok; $("#logout").hidden = !u || !DB.live;
     $("#who").textContent = u ? (DB.live ? u.email : "Demo mode") : "Signed out";
     $("#demo").hidden = DB.live;
+    $("#lerr").textContent = u && !ok ? "This account is not the admin. Log out and sign in with the admin email." : "";
+    if (ok) { DB.start(); if (DB.live && !membersOn) { membersOn = true; DB.onMembers(renderMembers); } }
+    $("#membersPanel").hidden = !DB.live;
   });
   $("#lbtn").onclick = async () => {
     $("#lerr").textContent = "";
@@ -140,5 +145,67 @@
   });
 
   DB.onCalls(arr => { calls = arr; renderList(); });
+
+  /* ---------- members ---------- */
+  let members = [], mtab = "pending";
+  const DAY = 864e5;
+  const mstate = m => m.status === "blocked" ? "blocked" : m.status === "pending" ? "pending" : (m.validTill > Date.now() ? "active" : "expired");
+  const fmtTs = ts => ts ? fmtDate(new Date(ts).toISOString().slice(0, 10)) : "—";
+  const mtabs = [["pending", "Pending"], ["active", "Active"], ["expired", "Expired"], ["blocked", "Blocked"]];
+  function renderMembers(arr) {
+    if (arr) members = arr;
+    const q = ($("#mq").value || "").trim().toLowerCase();
+    $("#mtabs").innerHTML = mtabs.map(([k, l]) => `<button class="chip" aria-pressed="${k === mtab}" data-k="${k}">${l}<span class="c">${members.filter(m => mstate(m) === k).length}</span></button>`).join("");
+    const act = members.filter(m => mstate(m) === "active").length;
+    $("#mcount").textContent = `${act} active · ${members.length} total`;
+    const list = members.filter(m => mstate(m) === mtab).filter(m => (m.email + " " + (m.name || "")).toLowerCase().includes(q))
+      .sort((a, b) => mtab === "active" ? a.validTill - b.validTill : (b.createdAt || 0) - (a.createdAt || 0));
+    $("#mlist").innerHTML = list.map(m => {
+      const st = mstate(m);
+      const days = st === "active" ? Math.ceil((m.validTill - Date.now()) / DAY) : 0;
+      const badge = { pending: "hold", active: "win", expired: "exit", blocked: "loss" }[st];
+      const info = st === "active" ? `Valid till ${fmtTs(m.validTill)} · ${days} day${days === 1 ? "" : "s"} left` : st === "expired" ? `Expired ${fmtTs(m.validTill)}` : `Requested ${fmtTs(m.createdAt)}`;
+      return `<div class="item" data-uid="${esc(m.uid)}">
+        <div><h4><span class="badge ${badge}">${st.toUpperCase()}</span>${esc(m.name || "—")}</h4>
+        <div class="meta">${esc(m.email)} · ${info}</div></div>
+        <div class="acts">
+          ${st === "blocked" ? `<button class="btn btn-line btn-sm" data-m="unblock">Unblock</button>` : `
+          <button class="btn btn-sm" style="background:var(--win);color:#fff" data-m="30">${st === "active" ? "+30 days" : "Approve 30 days"}</button>
+          <button class="btn btn-line btn-sm" data-m="90">+90 days</button>
+          <button class="btn btn-line btn-sm" data-m="365">+1 year</button>
+          <span class="cmpq"><input class="in" type="date" aria-label="Valid till date" data-mdate><button class="btn btn-line btn-sm" data-m="date">Set date</button></span>
+          <button class="btn btn-danger btn-sm" data-m="block">Block</button>`}
+          <button class="btn btn-danger btn-sm" data-m="del">Remove</button>
+        </div></div>`;
+    }).join("") || `<div class="empty">${mtab === "pending" ? "No pending requests. New sign-ups appear here." : "No members here."}</div>`;
+  }
+  $("#mtabs").onclick = e => { const b = e.target.closest(".chip"); if (b) { mtab = b.dataset.k; renderMembers(); } };
+  $("#mq").addEventListener("input", () => renderMembers());
+  $("#mlist").addEventListener("click", async e => {
+    const b = e.target.closest("[data-m]"); if (!b) return;
+    const row = b.closest(".item"), uid = row.dataset.uid, m = members.find(x => x.uid === uid); if (!m) return;
+    const a = b.dataset.m;
+    try {
+      if (["30", "90", "365"].includes(a)) {
+        const base = mstate(m) === "active" ? m.validTill : Date.now();
+        const till = base + (+a) * DAY;
+        await DB.updateMember(uid, { status: "active", validTill: till });
+        toast(`${m.name || m.email} active till ${fmtTs(till)}`);
+      }
+      if (a === "date") {
+        const v = row.querySelector("[data-mdate]").value; if (!v) return;
+        const till = Date.parse(v + "T23:59:59");
+        await DB.updateMember(uid, { status: "active", validTill: till });
+        toast(`${m.name || m.email} active till ${fmtTs(till)}`);
+      }
+      if (a === "block") { await DB.updateMember(uid, { status: "blocked" }); toast(`${m.name || m.email} blocked`); }
+      if (a === "unblock") { await DB.updateMember(uid, { status: m.validTill > Date.now() ? "active" : "pending" }); toast("Unblocked"); }
+      if (a === "del") {
+        if (b.dataset.armed) { await DB.deleteMember(uid); toast("Member removed"); }
+        else { b.dataset.armed = "1"; b.textContent = "Tap again to remove"; setTimeout(() => { if (b.isConnected) { delete b.dataset.armed; b.textContent = "Remove"; } }, 3000); }
+      }
+    } catch (er) { toast("Could not update. Check that the new database rules are published."); }
+  });
+  setInterval(() => members.length && renderMembers(), 60000);
   resetForm();
 })();

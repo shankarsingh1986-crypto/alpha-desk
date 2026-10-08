@@ -6,10 +6,14 @@ window.APP_CONFIG = {
   tagline: "Research-backed equity calls. Every entry, every exit, on the record.",
   analyst: "Shankar Singh",
 
-   // Join links (leave "" to hide a button)
+  // Admin login email (only this account can manage calls & members)
+  adminEmail: "shankarsingh1986@gmail.com",
+
+  // Join links (leave "" to hide a button)
   whatsappLink: "https://chat.whatsapp.com/DJKwAUS5IiM5noa26bqZd7",
-  telegramLink: "",
-  contactEmail: "",
+  telegramLink: "",          // e.g. "https://t.me/yourchannel"
+  contactEmail: "",          // e.g. "desk@yourdomain.in"
+
   // SEBI Research Analyst registration no. — leave "" if not registered
   sebiRegNo: "",
 

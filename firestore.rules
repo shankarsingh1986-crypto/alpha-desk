@@ -1,13 +1,32 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Everyone can read calls, updates and announcements.
-    // Only YOUR admin email can write. Replace the email below with yours.
+
     function isAdmin() {
       return request.auth != null && request.auth.token.email == "shankarsingh1986@gmail.com";
     }
-    match /calls/{id}    { allow read: if true; allow write: if isAdmin(); }
-    match /activity/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /meta/{id}     { allow read: if true; allow write: if isAdmin(); }
+    function memberDoc() {
+      return /databases/$(database)/documents/members/$(request.auth.uid);
+    }
+    function isMember() {
+      return request.auth != null
+        && exists(memberDoc())
+        && get(memberDoc()).data.status == "active"
+        && get(memberDoc()).data.validTill > request.time.toMillis();
+    }
+
+    // Calls, updates, announcements: approved paid members + admin only
+    match /calls/{id}    { allow read: if isAdmin() || isMember(); allow write: if isAdmin(); }
+    match /activity/{id} { allow read: if isAdmin() || isMember(); allow write: if isAdmin(); }
+    match /meta/{id}     { allow read: if isAdmin() || isMember(); allow write: if isAdmin(); }
+
+    // Members: a user can create their own PENDING request and read it; only admin approves
+    match /members/{uid} {
+      allow read: if isAdmin() || (request.auth != null && request.auth.uid == uid);
+      allow create: if request.auth != null && request.auth.uid == uid
+                    && request.resource.data.status == "pending"
+                    && request.resource.data.validTill == 0;
+      allow update, delete: if isAdmin();
+    }
   }
 }

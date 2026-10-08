@@ -72,6 +72,15 @@ label.fl{display:grid;gap:6px;font-size:12px;font-weight:700;letter-spacing:.04e
     </div>
   </div>
 
+  <div class="panel" id="membersPanel" hidden>
+    <div class="ph"><h3>Members</h3><span id="mcount"></span></div>
+    <div class="tools" style="margin-bottom:12px">
+      <div class="chips" id="mtabs"></div>
+      <label class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="mq" type="search" placeholder="Search name or email" aria-label="Search members"></label>
+    </div>
+    <div class="list" id="mlist"></div>
+  </div>
+
   <div class="grid2">
     <form class="panel form" id="form" novalidate>
       <div class="ph" style="margin:0"><h3 id="ftitle">New call</h3><button type="button" class="btn btn-line btn-sm" id="fnew" hidden>+ New call</button></div>

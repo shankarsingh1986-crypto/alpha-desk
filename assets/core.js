@@ -134,7 +134,10 @@
       if (c.id) await fs.collection("calls").doc(c.id).set(data); else await fs.collection("calls").add({ ...data, createdAt: Date.now() });
       if (act) await fs.collection("activity").add({ ...act, ts: Date.now() });
     };
-    DB.deleteCall = async id => { const o = cache[id]; await fs.collection("calls").doc(id).delete(); if (o) await fs.collection("activity").add({ type: "edit", text: `${o.share} call removed`, ts: Date.now() }); };
+    DB.deleteCall = async id => { await fs.collection("calls").doc(id).delete(); };
+    DB.updateActivity = (id, text) => fs.collection("activity").doc(id).update({ text });
+    DB.deleteActivity = id => fs.collection("activity").doc(id).delete();
+    DB.clearActivity = async () => { const s = await fs.collection("activity").get(); const b = fs.batch(); s.docs.forEach(d => b.delete(d.ref)); await b.commit(); };
     DB.setAnnouncement = async text => { await fs.doc("meta/settings").set({ announcement: text, announcedAt: Date.now() }, { merge: true }); if (text) await fs.collection("activity").add({ type: "announce", text, ts: Date.now() }); };
     DB.seed = async () => { const b = fs.batch(); const t = Date.now(); SEED.forEach((c, i) => b.set(fs.collection("calls").doc(), { ...c, note: c.note || "", createdAt: t - i, updatedAt: t - i })); b.set(fs.collection("activity").doc(), { type: "announce", text: "Track record published. Every call is now live on the desk.", ts: t }); await b.commit(); };
     DB.login = (e, p) => auth.signInWithEmailAndPassword(e, p);
@@ -172,7 +175,10 @@
       if (act) addAct(act);
       save(); push();
     };
-    DB.deleteCall = async id => { const o = st.calls.find(x => x.id === id); st.calls = st.calls.filter(x => x.id !== id); if (o) addAct({ type: "edit", text: `${o.share} call removed` }); save(); push(); };
+    DB.deleteCall = async id => { st.calls = st.calls.filter(x => x.id !== id); save(); push(); };
+    DB.updateActivity = async (id, text) => { const a = st.activity.find(x => x.id === id); if (a) a.text = text; save(); push(); };
+    DB.deleteActivity = async id => { st.activity = st.activity.filter(x => x.id !== id); save(); push(); };
+    DB.clearActivity = async () => { st.activity = []; save(); push(); };
     DB.setAnnouncement = async text => { st.settings = { announcement: text, announcedAt: Date.now() }; if (text) addAct({ type: "announce", text }); save(); push(); };
     DB.seed = async () => { st = seedState(); save(); push(); };
     DB.login = async () => {};

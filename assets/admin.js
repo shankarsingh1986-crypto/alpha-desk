@@ -146,6 +146,31 @@
 
   DB.onCalls(arr => { calls = arr; renderList(); });
 
+  /* ---------- recent updates feed ---------- */
+  let acts = [];
+  const timeTxt = ts => ts ? new Date(ts).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+  function renderActs() {
+    $("#alist").innerHTML = acts.length ? acts.map(a => `<div class="item" data-aid="${esc(a.id)}">
+      <div style="display:grid;gap:6px;min-width:0"><input class="in" value="${esc(a.text)}" aria-label="Update text" data-atext><div class="meta">${timeTxt(a.ts)}</div></div>
+      <div class="acts"><button class="btn btn-line btn-sm" data-a2="save">Save</button><button class="btn btn-danger btn-sm" data-a2="del">Delete</button></div></div>`).join("")
+      : `<div class="empty">No updates. New calls, exits and announcements appear here automatically.</div>`;
+    $("#aclear").hidden = !acts.length;
+  }
+  DB.onActivity(arr => { if (document.activeElement && document.activeElement.matches("[data-atext]")) { acts = arr; return; } acts = arr; renderActs(); });
+  $("#alist").addEventListener("click", async e => {
+    const b = e.target.closest("[data-a2]"); if (!b) return;
+    const row = b.closest(".item"), id = row.dataset.aid;
+    try {
+      if (b.dataset.a2 === "save") { const t = row.querySelector("[data-atext]").value.trim(); if (!t) return; await DB.updateActivity(id, t); toast("Update edited for all users"); }
+      if (b.dataset.a2 === "del") { await DB.deleteActivity(id); toast("Update deleted"); }
+    } catch (er) { toast("Could not save. Check your connection."); }
+  });
+  $("#aclear").onclick = async () => {
+    const b = $("#aclear");
+    if (b.dataset.armed) { await DB.clearActivity(); toast("All updates cleared"); delete b.dataset.armed; b.textContent = "Clear all updates"; }
+    else { b.dataset.armed = "1"; b.textContent = "Tap again to clear all"; setTimeout(() => { delete b.dataset.armed; b.textContent = "Clear all updates"; }, 3000); }
+  };
+
   /* ---------- members ---------- */
   let members = [], mtab = "pending";
   const DAY = 864e5;

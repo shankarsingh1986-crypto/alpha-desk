@@ -292,3 +292,15 @@ body.member .watermark{display:block}
 body.member main,body.member footer{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 body.shield main,body.shield footer,body.shield header{filter:blur(22px)}
 @media (max-width:720px){.me-till{display:none}}
+
+/* ---------- market strip ---------- */
+.mkt{background:var(--hero);border-bottom:1px solid var(--hero-line);color:var(--hero-ink);position:sticky;top:64px;z-index:19}
+.mkt-in{display:flex;align-items:center;gap:16px;padding-block:9px}
+.mkt-items{display:flex;gap:26px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0}
+.mkt-items::-webkit-scrollbar{display:none}
+.mi{display:flex;align-items:baseline;gap:8px;white-space:nowrap;font-size:13px}
+.mi b{font-family:var(--f-display);font-size:12px;letter-spacing:.04em;color:var(--hero-muted)}
+.mi .num{font-weight:700}
+.mi .up{color:#3BE0A4}.mi .down{color:#FF7C86}
+.mkt-ts{font-size:11px;color:var(--hero-muted);white-space:nowrap}
+@media (max-width:720px){.mkt-ts{display:none}.mkt-items{gap:18px}}

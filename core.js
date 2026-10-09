@@ -90,7 +90,7 @@
   }
 
   /* ---------- data layer ---------- */
-  const subs = { calls: [], activity: [], settings: [], auth: [], denied: [] };
+  const subs = { calls: [], activity: [], settings: [], auth: [], denied: [], market: [] };
   const emit = (k, v) => subs[k].forEach(f => f(v));
   const DB = { live: LIVE };
 
@@ -106,6 +106,7 @@
       unsubs.push(fs.collection("calls").onSnapshot(s => { cache = {}; const arr = s.docs.map(d => (cache[d.id] = { id: d.id, ...d.data() })); emit("calls", arr); }, denied));
       unsubs.push(fs.collection("activity").orderBy("ts", "desc").limit(40).onSnapshot(s => emit("activity", s.docs.map(d => ({ id: d.id, ...d.data() }))), denied));
       unsubs.push(fs.doc("meta/settings").onSnapshot(d => emit("settings", d.exists ? d.data() : {}), denied));
+      unsubs.push(fs.doc("meta/market").onSnapshot(d => emit("market", d.exists ? d.data() : null), () => {}));
     };
     DB.stop = () => { unsubs.forEach(f => f()); unsubs = []; };
     auth.onAuthStateChanged(u => emit("auth", u ? { uid: u.uid, email: u.email, name: u.displayName || (u.email || "").split("@")[0], photo: u.photoURL || "" } : null));
@@ -162,7 +163,12 @@
     };
     let st = load() || seedState();
     const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
-    const push = () => { emit("calls", st.calls.slice()); emit("activity", st.activity.slice().sort((a, b) => b.ts - a.ts).slice(0, 40)); emit("settings", { ...st.settings }); };
+    const demoMarket = () => ({ ts: Date.now() - 120000, items: [
+      { name: "NIFTY 50", price: 25184.35, change: 112.4, changePct: 0.45 },
+      { name: "SENSEX", price: 82310.6, change: 356.2, changePct: 0.43 },
+      { name: "BANK NIFTY", price: 56420.1, change: -88.7, changePct: -0.16 },
+      { name: "INDIA VIX", price: 11.42, change: -0.31, changePct: -2.64 } ] });
+    const push = () => { emit("calls", st.calls.slice()); emit("market", demoMarket()); emit("activity", st.activity.slice().sort((a, b) => b.ts - a.ts).slice(0, 40)); emit("settings", { ...st.settings }); };
     save();
     window.addEventListener("storage", e => { if (e.key === KEY) { st = load() || st; push(); } });
     const addAct = a => st.activity.unshift({ id: "a" + Date.now() + Math.random().toString(36).slice(2, 5), ...a, ts: Date.now() });
@@ -193,6 +199,8 @@
   DB.onSettings = f => subs.settings.push(f);
   DB.onAuth = f => subs.auth.push(f);
   DB.onDenied = f => subs.denied.push(f);
+  DB.onMarket = f => subs.market.push(f);
 
-  window.AD = { CFG, DB, VIEWS, VIEW_SHORT, STATUS, enrich, stats, esc, num, inr, pctTxt, fmtDate, ago, todayISO };
+  const symbolOf = c => (c.symbol || "").trim() || ("NSE:" + String(c.share || "").toUpperCase().replace(/\(.*?\)/g, "").replace(/[^A-Z0-9&-]/g, ""));
+  window.AD = { symbolOf, CFG, DB, VIEWS, VIEW_SHORT, STATUS, enrich, stats, esc, num, inr, pctTxt, fmtDate, ago, todayISO };
 })();

@@ -114,7 +114,7 @@
       <div class="card-h ${cls}"><span class="signal">${ICON[c.status] || ""}${STATUS[c.status].label}</span><small>${c.status === "BUY" ? "Buy range open" : "Stay invested"}</small></div>
       <div class="card-b">
         <div class="card-t"><div><h3>${esc(c.share)}</h3><div class="sub">Called ${fmtDate(c.date)}${c.note ? " · " + esc(c.note) : ""}</div></div><span class="view ${esc(c.view)}">${esc(VIEW_SHORT[c.view] || c.view)}</span></div>
-        <div class="trio"><div><small>Entry</small><b>${inr(c.entry)}</b></div><div><small>CMP</small><b>${inr(c.cmp)}</b></div><div><small>Target</small><b>${esc(c.target || "—")}</b></div></div>
+        <div class="trio"><div><small>Entry</small><b>${inr(c.entry)}</b></div><div><small>CMP${c.cmpAuto && c.cmpAt ? ` · ${ago(c.cmpAt).replace(" ago", "")}` : ""}</small><b>${inr(c.cmp)}</b></div><div><small>Target</small><b>${esc(c.target || "—")}</b></div></div>
         ${pos != null ? `<div class="journey"><div class="journey-top"><span>Entry</span><span>${c.upside != null ? (c.upside >= 0 ? "+" : "") + c.upside.toFixed(1) + "% to target" : ""}</span><span>Target</span></div><div class="bar"><i style="width:${pos}%"></i><em style="left:${pos}%"></em></div></div>` : ""}
         <div class="card-f"><span>${c.days} day${c.days === 1 ? "" : "s"} held</span><span>Unrealised <span class="pl ${c.pct == null ? "" : c.pct >= 0 ? "up" : "down"}">${pctTxt(c.pct)}</span></span></div>
       </div></article>`;
@@ -191,6 +191,22 @@
     if (gotCalls) $("#feed") && render();
   });
   DB.onSettings(s => { settings = s || {}; renderAnnc(); });
+
+  /* ---------- market strip ---------- */
+  let market = null;
+  function renderMarket() {
+    const m = market;
+    if (!m || !m.items || !m.items.length) { $("#mkt").hidden = true; return; }
+    $("#mkt").hidden = false;
+    $("#mktItems").innerHTML = m.items.map(i => {
+      const up = (i.change || 0) >= 0, cls = up ? "up" : "down";
+      const pr = i.price == null ? "—" : (+i.price).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return `<span class="mi"><b>${esc(i.name)}</b><span class="num">${pr}</span><span class="num ${cls}">${up ? "▲" : "▼"} ${Math.abs(i.change || 0).toFixed(2)} (${(i.changePct || 0) >= 0 ? "+" : ""}${(+i.changePct || 0).toFixed(2)}%)</span></span>`;
+    }).join("");
+    $("#mktTs").textContent = "Delayed · " + ago(m.ts);
+  }
+  DB.onMarket(m => { market = m; renderMarket(); });
+  setInterval(renderMarket, 30000);
   $("#q").addEventListener("input", render);
 
   /* ---------- install app prompt ---------- */

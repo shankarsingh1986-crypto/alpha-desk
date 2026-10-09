@@ -37,6 +37,9 @@ label.fl{display:grid;gap:6px;font-size:12px;font-weight:700;letter-spacing:.04e
 .acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .cmpq{display:flex;gap:4px}
 .cmpq input{width:90px;padding:7px 9px;font-size:13px}
+.sym{font-family:var(--f-data);font-size:11px;padding:2px 6px;border-radius:6px;background:var(--surface-2);color:var(--muted)}
+.sym.ok{background:var(--win-soft);color:var(--win)}
+.sym.bad{background:var(--loss-soft);color:var(--loss);font-weight:700}
 .tabs2{display:flex;gap:6px;margin-bottom:12px}
 .login{max-width:400px;margin:60px auto;display:grid;gap:14px}
 @media (max-width:900px){.grid2{grid-template-columns:1fr}.form{position:static}.item{grid-template-columns:1fr}.acts{justify-content:flex-start}}
@@ -110,6 +113,7 @@ label.fl{display:grid;gap:6px;font-size:12px;font-weight:700;letter-spacing:.04e
         <label class="fl">Entry ₹<input class="in" id="fentry" type="number" step="0.01" inputmode="decimal"></label>
         <label class="fl">CMP ₹<input class="in" id="fcmp" type="number" step="0.01" inputmode="decimal"></label>
       </div>
+      <label class="fl">Price symbol (for auto CMP)<input class="in" id="fsymbol" placeholder="NSE:SUNFLAG  or  BOM:522101" autocapitalize="characters"></label>
       <label class="fl">Target<input class="in" id="ftarget" placeholder="e.g. 550+  or  75 / 100+"></label>
       <div class="f2" id="exitBox">
         <label class="fl">Exit ₹<input class="in" id="fexit" type="number" step="0.01" inputmode="decimal"></label>

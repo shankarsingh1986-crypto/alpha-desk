@@ -1,6 +1,6 @@
 /* Admin panel */
 (function () {
-  const { CFG, DB, VIEW_SHORT, STATUS, enrich, esc, num, inr, pctTxt, fmtDate, todayISO } = window.AD;
+  const { ago, symbolOf, CFG, DB, VIEW_SHORT, STATUS, enrich, esc, num, inr, pctTxt, fmtDate, todayISO } = window.AD;
   const $ = s => document.querySelector(s);
   document.querySelectorAll("[data-brand]").forEach(e => e.textContent = CFG.brand || "SS Alpha Desk");
 
@@ -49,7 +49,7 @@
 
   function readForm() {
     return {
-      id: F("id").value || undefined, status, share: F("share").value.trim().toUpperCase(), date: F("date").value, view: F("view").value,
+      id: F("id").value || undefined, status, share: F("share").value.trim().toUpperCase(), symbol: F("symbol").value.trim().toUpperCase().replace(/\s+/g, ""), date: F("date").value, view: F("view").value,
       entry: num(F("entry").value), cmp: num(F("cmp").value), target: F("target").value.trim(),
       exit: (status === "EXIT" || status === "TARGET") ? num(F("exit").value) : null,
       exitDate: (status === "EXIT" || status === "TARGET") ? F("exitDate").value : "", note: F("note").value.trim()
@@ -62,15 +62,17 @@
     $("#calc").innerHTML = `<span>${c.closed ? "Profit" : "Unrealised"} <b class="${cls}">${c.pnl == null ? "—" : inr(c.pnl)}</b></span><span>Return <b class="${cls}">${pctTxt(c.pct)}</b></span><span>Held <b>${c.days} d</b></span>${c.closed && c.pct != null ? `<span><b class="${cls}">${c.pct > 0 ? "WIN" : "LOSS"}</b></span>` : ""}`;
   }
   $("#form").addEventListener("input", calc);
+  F("share").addEventListener("input", () => { if (!F("symbol").dataset.touched) F("symbol").value = F("share").value.trim() ? symbolOf({ share: F("share").value }) : ""; });
+  F("symbol").addEventListener("input", () => { F("symbol").dataset.touched = "1"; });
 
   function resetForm() {
-    $("#form").reset(); F("id").value = ""; F("date").value = todayISO(); cmpAt = null;
+    $("#form").reset(); delete F("symbol").dataset.touched; F("id").value = ""; F("date").value = todayISO(); cmpAt = null;
     $("#ftitle").textContent = "New call"; $("#fsave").textContent = "Publish call"; $("#fnew").hidden = true; $("#ferr").textContent = "";
     setStatus("BUY");
   }
   function editCall(id, forceStatus) {
     const c = calls.find(x => x.id === id); if (!c) return;
-    F("id").value = c.id; F("share").value = c.share || ""; F("date").value = c.date || ""; F("view").value = c.view || "ST";
+    F("id").value = c.id; F("share").value = c.share || ""; F("symbol").value = c.symbol || ""; F("date").value = c.date || ""; F("view").value = c.view || "ST";
     F("entry").value = c.entry ?? ""; F("cmp").value = c.cmp ?? ""; F("target").value = c.target || "";
     F("exit").value = c.exit ?? ""; F("exitDate").value = c.exitDate || ""; F("note").value = c.note || ""; cmpAt = c.cmpAt || null;
     $("#ftitle").textContent = "Edit " + c.share; $("#fsave").textContent = "Save & publish update"; $("#fnew").hidden = false; $("#ferr").textContent = "";
@@ -109,7 +111,7 @@
       const pl = c.pct == null ? "" : c.pct >= 0 ? "up" : "down";
       return `<div class="item" data-id="${esc(c.id)}">
         <div><h4><span class="badge ${cls}">${STATUS[c.status].label}</span>${esc(c.share)}<span class="view ${esc(c.view)}">${esc(VIEW_SHORT[c.view] || c.view)}</span></h4>
-        <div class="meta">${fmtDate(c.date)} · Entry ${inr(c.entry)} · Target ${esc(c.target || "—")}${c.closed ? ` · Exit ${inr(c.exit)}` : ` · CMP ${inr(c.cmp)}`} · <b class="${pl}">${pctTxt(c.pct)}</b> · ${c.days} d${c.note ? " · " + esc(c.note) : ""}</div></div>
+        <div class="meta">${c.closed ? "" : `<span class="sym ${c.cmpErr ? "bad" : c.cmpAuto ? "ok" : ""}" title="${c.cmpErr ? "Price not found for this symbol. Edit the call and fix the symbol." : "Symbol used for auto CMP"}">${esc(symbolOf(c))}${c.cmpErr ? " · not found" : c.cmpAuto ? " · auto " + ago(c.cmpAt) : ""}</span> · `}${fmtDate(c.date)} · Entry ${inr(c.entry)} · Target ${esc(c.target || "—")}${c.closed ? ` · Exit ${inr(c.exit)}` : ` · CMP ${inr(c.cmp)}`} · <b class="${pl}">${pctTxt(c.pct)}</b> · ${c.days} d${c.note ? " · " + esc(c.note) : ""}</div></div>
         <div class="acts">
           ${c.closed ? "" : `<span class="cmpq"><input class="in" type="number" step="0.01" placeholder="CMP" aria-label="Update CMP for ${esc(c.share)}" data-cmp><button class="btn btn-line btn-sm" data-a="cmp">Update CMP</button></span>`}
           ${c.status === "BUY" ? `<button class="btn btn-sm" style="background:var(--hold);color:#fff" data-a="hold">→ HOLD</button>` : ""}
@@ -136,7 +138,7 @@
     if (a === "hold") { await DB.saveCall({ ...c, status: "HOLD" }); toast(`${c.share} moved to HOLD`); }
     if (a === "cmp") {
       const v = num(item.querySelector("[data-cmp]").value); if (!v) return;
-      await DB.saveCall({ ...c, cmp: v, cmpAt: Date.now() }); toast(`${c.share} CMP updated to ${inr(v)}`);
+      await DB.saveCall({ ...c, cmp: v, cmpAt: Date.now(), cmpAuto: false }); toast(`${c.share} CMP updated to ${inr(v)}`);
     }
     if (a === "del") {
       if (b.dataset.armed) { await DB.deleteCall(id); toast(`${c.share} deleted`); }

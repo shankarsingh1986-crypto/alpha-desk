@@ -7,18 +7,18 @@
 <meta name="description" content="Live equity calls with a fully transparent track record — every entry, target and exit.">
 <meta name="theme-color" content="#081022">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="icons/icon-192.png">
-<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
-<link rel="stylesheet" href="assets/styles.css">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body class="locked">
 
 <div class="gate" id="gate">
   <div class="gate-card">
-    <div class="gate-brand"><img src="icons/icon-192.png" alt=""><span data-brand>SS Alpha Desk</span></div>
+    <div class="gate-brand"><img src="icon-192.png" alt=""><span data-brand>SS Alpha Desk</span></div>
 
     <div data-state="loading"><div class="spin"></div><p class="g-sub">Checking your access…</p></div>
 
@@ -72,7 +72,7 @@
 
 <header class="nav">
   <div class="container">
-    <a class="logo" href="#top"><img src="icons/icon-192.png" alt=""><span data-brand>SS Alpha Desk</span></a>
+    <a class="logo" href="#top"><img src="icon-192.png" alt=""><span data-brand>SS Alpha Desk</span></a>
     <nav>
       <a href="#calls">Live Calls</a>
       <a href="#performance">Performance</a>
@@ -214,7 +214,7 @@
 </footer>
 
 <div class="install-bar" id="installBar" hidden>
-  <img src="icons/icon-192.png" alt="">
+  <img src="icon-192.png" alt="">
   <div class="ib-text"><b>Get the SS Alpha Desk app</b><span id="ibHint">Live calls on your home screen. Free, no Play Store needed.</span></div>
   <button class="btn btn-primary" id="ibInstall">Install</button>
   <button class="ib-close" id="ibClose" aria-label="Close">×</button>
@@ -227,9 +227,9 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="assets/core.js"></script>
-<script src="assets/site.js"></script>
-<script src="assets/gate.js"></script>
+<script src="core.js"></script>
+<script src="site.js"></script>
+<script src="gate.js"></script>
 <script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}</script>
 </body>
 </html>

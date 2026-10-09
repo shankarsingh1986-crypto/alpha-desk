@@ -14,57 +14,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
 <link rel="stylesheet" href="assets/styles.css">
 </head>
-<body class="locked">
-
-<div class="gate" id="gate">
-  <div class="gate-card">
-    <div class="gate-brand"><img src="icons/icon-192.png" alt=""><span data-brand>SS Alpha Desk</span></div>
-
-    <div data-state="loading"><div class="spin"></div><p class="g-sub">Checking your access…</p></div>
-
-    <div data-state="signin" hidden>
-      <span class="g-lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Members only</span>
-      <h2>Sign in to view live calls</h2>
-      <p class="g-sub">This desk is private. Access is given only to approved members.</p>
-      <button class="btn g-google" id="gGoogle"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continue with Google</button>
-      <button class="g-link" id="gEmailToggle">Use email and password instead</button>
-      <form class="g-form" id="gForm" hidden novalidate>
-        <input class="in" id="gName" placeholder="Your full name" autocomplete="name" hidden>
-        <input class="in" id="gEmail" type="email" placeholder="Email" autocomplete="email">
-        <input class="in" id="gPass" type="password" placeholder="Password (min 6 characters)" autocomplete="current-password">
-        <div class="g-err" id="gErr"></div>
-        <button class="btn btn-primary" type="submit" id="gSubmit">Sign in</button>
-        <div class="g-row"><button type="button" class="g-link" id="gMode">New here? Create an account</button><button type="button" class="g-link" id="gReset">Forgot password?</button></div>
-      </form>
-      <div class="g-join" data-wa><span>Not a member yet?</span><a class="btn btn-wa" data-wa-link target="_blank" rel="noopener">Join on WhatsApp</a></div>
-    </div>
-
-    <div data-state="pending" hidden>
-      <span class="g-lock g-amber">Approval pending</span>
-      <h2>Hi <span data-name></span>, you're almost in</h2>
-      <p class="g-sub">Your request has reached the admin. Access opens automatically on this screen once your membership is approved.</p>
-      <div class="g-id"><small>Your registered email</small><b data-email></b><button class="g-link" data-copy>Copy</button></div>
-      <p class="g-sub">Share this email with the admin on WhatsApp after completing your membership.</p>
-      <div class="g-actions"><a class="btn btn-wa" data-wa-link target="_blank" rel="noopener">Message on WhatsApp</a><button class="btn btn-line" data-signout>Sign out</button></div>
-    </div>
-
-    <div data-state="expired" hidden>
-      <span class="g-lock g-red">Membership expired</span>
-      <h2>Your access ended on <span data-till></span></h2>
-      <p class="g-sub">Renew your membership to continue receiving live calls. Access restores instantly once renewed.</p>
-      <div class="g-id"><small>Your registered email</small><b data-email></b><button class="g-link" data-copy>Copy</button></div>
-      <div class="g-actions"><a class="btn btn-wa" data-wa-link target="_blank" rel="noopener">Renew on WhatsApp</a><button class="btn btn-line" data-signout>Sign out</button></div>
-    </div>
-
-    <div data-state="blocked" hidden>
-      <span class="g-lock g-red">Access removed</span>
-      <h2>This account does not have access</h2>
-      <p class="g-sub">Contact the admin if you think this is a mistake.</p>
-      <div class="g-actions"><button class="btn btn-line" data-signout>Sign out</button></div>
-    </div>
-  </div>
-</div>
-<div class="watermark" id="watermark" aria-hidden="true"></div>
+<body>
 
 <div class="annc" id="annc" hidden>
   <div class="container"><span class="tag">UPDATE</span><p id="anncText"></p><button id="anncClose" aria-label="Dismiss">×</button></div>
@@ -79,7 +29,6 @@
       <a href="#record">Track Record</a>
       <a href="#how">How It Works</a>
     </nav>
-    <div class="me" id="me" hidden><span class="me-till" id="meTill"></span><button class="btn btn-ghost btn-sm" data-signout>Sign out</button></div>
     <button class="btn btn-ghost" id="installBtn" hidden>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M6 11l6 6 6-6M5 21h14"/></svg>Install App
     </button>
@@ -229,7 +178,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="assets/core.js"></script>
 <script src="assets/site.js"></script>
-<script src="assets/gate.js"></script>
 <script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}</script>
 </body>
 </html>
